@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Dashboard — ReZniX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --purple: #7c3aed;
+      --purple-light: #a78bfa;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --pink: #ec4899;
+      --bg: #080810;
+      --card: #0f0f1a;
+      --border: rgba(255,255,255,0.06);
+      --text: #e2e8f0;
+      --muted: #6b7280;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* GLOW */
+    .glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow1 { width: 500px; height: 500px; background: rgba(124,58,237,0.1); top: -150px; left: -150px; }
+    .glow2 { width: 400px; height: 400px; background: rgba(6,182,212,0.07); bottom: -100px; right: -100px; }
+
+    /* NAVBAR */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 40px;
+      height: 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(8,8,16,0.8);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 17px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .logo-text {
+      background: linear-gradient(135deg, #fff, rgba(255,255,255,0.7));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .nav-links a.active { color: var(--purple-light); background: rgba(124,58,237,0.1); }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(124,58,237,0.1);
+      border: 1px solid rgba(124,58,237,0.2);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 13px;
+      color: var(--purple-light);
+    }
+
+    .user-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.8); } }
+
+    .logout-btn {
+      font-size: 13px;
+      color: #f87171;
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(248,113,113,0.2);
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover { background: rgba(248,113,113,0.1); }
+
+    /* MAIN */
+    .main {
+      padding: 88px 40px 48px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* WELCOME */
+    .welcome {
+      margin-bottom: 36px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .welcome-tag {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .welcome-title {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+    }
+
+    .welcome-title span {
+      background: linear-gradient(135deg, var(--purple-light), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome-sub {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 700px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.6s ease both;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .stat-card:hover { border-color: rgba(124,58,237,0.3); transform: translateY(-2px); }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+    }
+
+    .stat-card.purple::before { background: linear-gradient(90deg, transparent, rgba(124,58,237,0.6), transparent); }
+    .stat-card.cyan::before { background: linear-gradient(90deg, transparent, rgba(6,182,212,0.6), transparent); }
+    .stat-card.green::before { background: linear-gradient(90deg, transparent, rgba(16,185,129,0.6), transparent); }
+
+    .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .icon-purple { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.2); }
+    .icon-cyan { background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.2); }
+    .icon-green { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .stat-card.purple .stat-value { color: var(--purple-light); }
+    .stat-card.cyan .stat-value { color: var(--cyan); }
+    .stat-card.green .stat-value { color: var(--green); }
+
+    .stat-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* GRID 2 COL */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* CARDS */
+    .dash-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .card-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .view-all {
+      font-size: 12px;
+      color: var(--purple-light);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .view-all:hover { color: var(--purple); }
+
+    /* RECENT ANALYSES */
+    .analysis-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .analysis-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .analysis-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .analysis-icon {
+      width: 36px; height: 36px;
+      background: rgba(124,58,237,0.1);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .analysis-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .analysis-date {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .analysis-score {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .score-high { color: var(--green); }
+    .score-mid { color: var(--amber); }
+    .score-low { color: #f87171; }
+
+    /* QUICK ACTIONS */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      border-color: rgba(124,58,237,0.4);
+      background: rgba(124,58,237,0.05);
+      transform: translateY(-2px);
+    }
+
+    .action-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* CHART SECTION */
+    .chart-section {
+      margin-bottom: 24px;
+    }
+
+    .no-breakdown {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .no-breakdown a {
+      color: var(--purple-light);
+      text-decoration: none;
+    }
+
+    /* PROGRESS BARS */
+    .progress-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .progress-item {}
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .progress-label { font-size: 13px; color: var(--text); font-weight: 500; }
+    .progress-value { font-size: 13px; font-weight: 700; }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (max-width: 580px) {
+      .main { padding: 80px 16px 32px; }
+      nav { padding: 0 16px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow glow1"></div>
+  <div class="glow glow2"></div>
+
+  <!-- NAVBAR -->
+  <nav>
+    <a href="/dashboard" class="logo">
+      <div class="logo-icon">✦</div>
+      <span class="logo-text">ReZniX</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="active">Dashboard</a></li>
+      <li><a href="/">Analyze</a></li>
+      <li><a href="/history">History</a></li>
+      <li><a href="/cover-letter">Cover Letter</a></li>
+      <li><a href="/interview-prep">Interview Prep</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="user-badge">
+        <div class="user-dot"></div>
+        {{ user_name }}
+      </div>
+      <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- WELCOME -->
+    <div class="welcome">
+      <div class="welcome-tag">👋 Welcome back</div>
+      <div class="welcome-title">Hello, <span>{{ user_name }}!</span></div>
+      <div class="welcome-sub">Here's your resume analytics overview</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card purple" style="animation-delay: 0.1s">
+        <div class="stat-icon icon-purple">📄</div>
+        <div class="stat-label">Total Analyses</div>
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-sub">Resumes analyzed</div>
+      </div>
+
+      <div class="stat-card cyan" style="animation-delay: 0.2s">
+        <div class="stat-icon icon-cyan">🏆</div>
+        <div class="stat-label">Highest ATS Score</div>
+        <div class="stat-value">{{ stats.highest }}%</div>
+        <div class="stat-sub">Your best score</div>
+      </div>
+
+      <div class="stat-card green" style="animation-delay: 0.3s">
+        <div class="stat-icon icon-green">📊</div>
+        <div class="stat-label">Average ATS Score</div>
+        <div class="stat-value">{{ stats.average }}%</div>
+        <div class="stat-sub">Across all analyses</div>
+      </div>
+    </div>
+
+    <!-- CHARTS + RECENT -->
+    <div class="grid-2">
+
+      <!-- BREAKDOWN CHART -->
+      <div class="dash-card chart-section" style="animation-delay: 0.4s">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Resume Breakdown</div>
+            <div class="card-sub">AI-powered multi-dimensional analysis</div>
+          </div>
+        </div>
+
+        {% if breakdown %}
+        <div class="progress-list" id="progressList">
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">🎯 Skills Match</span>
+              <span class="progress-value" style="color: #a78bfa;">{{ breakdown.skills }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 0%; background: linear-gradient(90deg, #7c3aed, #a78bfa);" data-width="{{ breakdown.skills }}"></div>
+            </div>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">🔑 Keywords</span>
+              <span class="progress-value" style="color: #06b6d4;">{{ breakdown.keywords }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 0%; background: linear-gradient(90deg, #0891b2, #06b6d4);" data-width="{{ breakdown.keywords }}"></div>
+            </div>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">📋 Formatting</span>
+              <span class="progress-value" style="color: #10b981;">{{ breakdown.formatting }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 0%; background: linear-gradient(90deg, #059669, #10b981);" data-width="{{ breakdown.formatting }}"></div>
+            </div>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">✍️ Grammar</span>
+              <span class="progress-value" style="color: #f59e0b;">{{ breakdown.grammar }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 0%; background: linear-gradient(90deg, #d97706, #f59e0b);" data-width="{{ breakdown.grammar }}"></div>
+            </div>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">💼 Experience</span>
+              <span class="progress-value" style="color: #ec4899;">{{ breakdown.experience }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 0%; background: linear-gradient(90deg, #db2777, #ec4899);" data-width="{{ breakdown.experience }}"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Radar Chart -->
+        <div style="margin-top: 24px; height: 200px;">
+          <canvas id="radarChart"></canvas>
+        </div>
+
+        {% else %}
+        <div class="no-breakdown">
+          <div style="font-size: 32px; margin-bottom: 12px;">📊</div>
+          <p>No breakdown available yet.</p>
+          <p style="margin-top: 8px;"><a href="/">Analyze a resume</a> to see your breakdown!</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+
+        <!-- RECENT ANALYSES -->
+        <div class="dash-card" style="animation-delay: 0.5s">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Recent Analyses</div>
+              <div class="card-sub">Your latest resume checks</div>
+            </div>
+            <a href="/history" class="view-all">View all →</a>
+          </div>
+
+          {% if stats.recent %}
+            {% for row in stats.recent %}
+            <div class="analysis-item">
+              <div class="analysis-left">
+                <div class="analysis-icon">📄</div>
+                <div>
+                  <div class="analysis-name">{{ row[2] }}</div>
+                  <div class="analysis-date">{{ row[6] }}</div>
+                </div>
+              </div>
+              <div class="analysis-score {% if row[3] >= 70 %}score-high{% elif row[3] >= 40 %}score-mid{% else %}score-low{% endif %}">
+                {{ row[3] }}%
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="no-breakdown">
+              <p>No analyses yet.</p>
+              <p style="margin-top: 8px;"><a href="/">Analyze your first resume!</a></p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="dash-card" style="animation-delay: 0.6s">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Quick Actions</div>
+              <div class="card-sub">Jump to any feature</div>
+            </div>
+          </div>
+
+          <div class="actions-grid">
+            <a href="/" class="action-btn">
+              <div class="action-icon icon-purple">🎯</div>
+              Analyze Resume
+            </a>
+            <a href="/cover-letter" class="action-btn">
+              <div class="action-icon icon-cyan">✉️</div>
+              Cover Letter
+            </a>
+            <a href="/interview-prep" class="action-btn">
+              <div class="action-icon" style="background: rgba(236,72,153,0.12); border: 1px solid rgba(236,72,153,0.2);">🎤</div>
+              Interview Prep
+            </a>
+            <a href="/history" class="action-btn">
+              <div class="action-icon icon-green">📊</div>
+              View History
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Animate progress bars
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.querySelectorAll('.progress-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      }, 300);
+    });
+
+    // Radar chart
+    {% if breakdown %}
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['Skills', 'Keywords', 'Formatting', 'Grammar', 'Experience'],
+        datasets: [{
+          label: 'Your Resume',
+          data: [
+            {{ breakdown.skills }},
+            {{ breakdown.keywords }},
+            {{ breakdown.formatting }},
+            {{ breakdown.grammar }},
+            {{ breakdown.experience }}
+          ],
+          backgroundColor: 'rgba(124, 58, 237, 0.15)',
+          borderColor: '#7c3aed',
+          borderWidth: 2,
+          pointBackgroundColor: '#a78bfa',
+          pointBorderColor: '#7c3aed',
+          pointRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            ticks: {
+              display: false,
+            },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            angleLines: { color: 'rgba(255,255,255,0.05)' },
+            pointLabels: {
+              color: '#9ca3af',
+              font: { size: 11, family: 'Inter' }
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+    {% endif %}
+  </script>
+</body>
+</html>

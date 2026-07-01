@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cover Letter Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #13111C;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.1;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .blob1 { width: 400px; height: 400px; background: #7c3aed; top: -100px; left: -100px; }
+    .blob2 { width: 350px; height: 350px; background: #4f46e5; bottom: -100px; right: -100px; }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-title { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .page-sub { font-size: 14px; color: #6b7280; }
+
+    .back-btn {
+      padding: 10px 20px;
+      background: transparent;
+      color: #a78bfa;
+      border: 1px solid #4c3a8e;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover { background: #2d1f4e; }
+
+    .card {
+      background: rgba(26, 23, 38, 0.9);
+      border: 1px solid #2e2a45;
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 20px;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .info-box {
+      background: #1a1433;
+      border: 1px solid #3b2f6e;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #a78bfa;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 500;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: #13111C;
+      border: 1px solid #2e2a45;
+      border-radius: 12px;
+      color: #e2e8f0;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      outline: none;
+      transition: border 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    input[type="text"]:focus { border-color: #7c3aed; }
+
+    select {
+      width: 100%;
+      background: #13111C;
+      border: 1px solid #2e2a45;
+      border-radius: 12px;
+      color: #e2e8f0;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+    }
+
+    select:focus { border-color: #7c3aed; }
+    select option { background: #1a1726; color: #e2e8f0; }
+
+    .custom-input {
+      width: 100%;
+      background: #13111C;
+      border: 1px solid #2e2a45;
+      border-radius: 12px;
+      color: #e2e8f0;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-top: -12px;
+      margin-bottom: 20px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      display: none;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 15px;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button[type="submit"]:hover { background: #6d28d9; transform: translateY(-2px); }
+
+    /* Letter wrapper */
+    .letter-wrapper {
+      background: rgba(26, 23, 38, 0.9);
+      border: 1px solid #3b2f6e;
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 20px;
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    }
+
+    .letter-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .letter-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+      color: #60a5fa;
+    }
+
+    .edit-toggle {
+      padding: 8px 18px;
+      background: transparent;
+      color: #fbbf24;
+      border: 1px solid #78350f;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .edit-toggle:hover { background: #78350f; }
+    .edit-toggle.active { background: #78350f; color: white; }
+
+    /* White paper */
+    .letter-page {
+      background: white;
+      color: #1a1a2e;
+      border-radius: 8px;
+      padding: 60px 70px;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 14pt;
+      line-height: 1.9;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      white-space: pre-wrap;
+      min-height: 600px;
+      outline: none;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .letter-page[contenteditable="true"] {
+      box-shadow: 0 0 0 3px #7c3aed, 0 4px 24px rgba(0,0,0,0.3);
+      cursor: text;
+    }
+
+    .editing-notice {
+      display: none;
+      font-size: 12px;
+      color: #fbbf24;
+      margin-top: 10px;
+    }
+
+    .editing-notice.show { display: block; }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-purple { background: #7c3aed; color: white; }
+    .btn-purple:hover { background: #6d28d9; transform: translateY(-2px); }
+
+    .btn-green { background: #059669; color: white; }
+    .btn-green:hover { background: #047857; transform: translateY(-2px); }
+
+    .btn-blue { background: #2563eb; color: white; }
+    .btn-blue:hover { background: #1d4ed8; transform: translateY(-2px); }
+
+    .btn-outline {
+      background: transparent;
+      color: #a78bfa;
+      border: 1px solid #4c3a8e;
+    }
+
+    .btn-outline:hover { background: #2d1f4e; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Hide everything when printing */
+    @media print {
+      body * { visibility: hidden; }
+      #letterPage, #letterPage * { visibility: visible; }
+      #letterPage {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        padding: 60px 80px;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 13pt;
+        line-height: 1.9;
+        color: #000;
+        background: white;
+        box-shadow: none;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <p class="page-title">Cover Letter Generator</p>
+        <p class="page-sub">AI generates a print-ready, editable cover letter</p>
+      </div>
+      <a href="/" class="back-btn">← Back to Analyzer</a>
+    </div>
+
+    <div class="card">
+      <div class="info-box">
+        ✅ AI will automatically extract your name, email, phone and details from your resume
+      </div>
+
+      <form method="POST" onsubmit="handleSubmit(this)">
+        <label>Your Name</label>
+        <input type="text" name="user_name" placeholder="Tarandeep Singh" required>
+
+        <label>Job Role</label>
+        <select name="job_role" id="jobRoleSelect" onchange="handleRoleChange(this)" required>
+          <option value="" disabled selected>Select a job role...</option>
+          <option value="Machine Learning Engineer">Machine Learning Engineer</option>
+          <option value="Data Scientist">Data Scientist</option>
+          <option value="Software Engineer">Software Engineer</option>
+          <option value="NLP Engineer">NLP Engineer</option>
+          <option value="Full Stack Developer">Full Stack Developer</option>
+          <option value="Backend Engineer">Backend Engineer</option>
+          <option value="Frontend Developer">Frontend Developer</option>
+          <option value="DevOps Engineer">DevOps Engineer</option>
+          <option value="Data Engineer">Data Engineer</option>
+          <option value="Computer Vision Engineer">Computer Vision Engineer</option>
+          <option value="AI Research Engineer">AI Research Engineer</option>
+          <option value="Android Developer">Android Developer</option>
+          <option value="iOS Developer">iOS Developer</option>
+          <option value="Cloud Engineer">Cloud Engineer</option>
+          <option value="other">Other (type below)</option>
+        </select>
+        <input type="text" class="custom-input" name="job_role_custom" id="jobRoleCustom" placeholder="Type your job role...">
+
+        <label>Company Name</label>
+        <select name="company_name" id="companySelect" onchange="handleCompanyChange(this)" required>
+          <option value="" disabled selected>Select a company...</option>
+          <option value="Google">Google</option>
+          <option value="Microsoft">Microsoft</option>
+          <option value="Amazon">Amazon</option>
+          <option value="Apple">Apple</option>
+          <option value="Meta">Meta</option>
+          <option value="Netflix">Netflix</option>
+          <option value="Tesla">Tesla</option>
+          <option value="OpenAI">OpenAI</option>
+          <option value="Anthropic">Anthropic</option>
+          <option value="Adobe">Adobe</option>
+          <option value="Salesforce">Salesforce</option>
+          <option value="IBM">IBM</option>
+          <option value="Intel">Intel</option>
+          <option value="Nvidia">Nvidia</option>
+          <option value="Infosys">Infosys</option>
+          <option value="TCS">TCS</option>
+          <option value="Wipro">Wipro</option>
+          <option value="Flipkart">Flipkart</option>
+          <option value="Zomato">Zomato</option>
+          <option value="Swiggy">Swiggy</option>
+          <option value="other">Other (type below)</option>
+        </select>
+        <input type="text" class="custom-input" name="company_name_custom" id="companyCustom" placeholder="Type company name...">
+
+        <button type="submit" id="submitBtn">
+          <span class="btn-text">Generate Cover Letter →</span>
+          <span class="loading" style="display:none"><span class="spinner"></span>Generating...</span>
+        </button>
+      </form>
+    </div>
+
+    {% if cover_letter %}
+    <div class="letter-wrapper">
+      <div class="letter-toolbar">
+        <p class="letter-title">✉️ Your Cover Letter</p>
+        <button class="edit-toggle" id="editToggle" onclick="toggleEdit()">✏️ Edit Letter</button>
+      </div>
+
+      <!-- White paper editable page -->
+      <div class="letter-page"
+           id="letterPage"
+           contenteditable="false">{{ cover_letter }}</div>
+
+      <p class="editing-notice" id="editNotice">
+        ✏️ Editing mode — click anywhere on the letter to make changes
+      </p>
+
+      <div class="btn-row">
+        <button class="action-btn btn-purple" onclick="copyText()">📋 Copy Text</button>
+        <button class="action-btn btn-green" onclick="printLetter()">🖨️ Print / Save PDF</button>
+        <button class="action-btn btn-blue" onclick="downloadTxt()">⬇️ Download as TXT</button>
+        <a href="/cover-letter" class="action-btn btn-outline">🔄 Generate Another</a>
+        <a href="/" class="action-btn btn-outline">← Home</a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <script>
+    let isEditing = false;
+
+    function toggleEdit() {
+      isEditing = !isEditing;
+      const page = document.getElementById('letterPage');
+      const btn = document.getElementById('editToggle');
+      const notice = document.getElementById('editNotice');
+
+      page.contentEditable = isEditing ? 'true' : 'false';
+
+      if (isEditing) {
+        btn.textContent = '✅ Done Editing';
+        btn.classList.add('active');
+        notice.classList.add('show');
+        page.focus();
+      } else {
+        btn.textContent = '✏️ Edit Letter';
+        btn.classList.remove('active');
+        notice.classList.remove('show');
+      }
+    }
+
+    function copyText() {
+      const text = document.getElementById('letterPage').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelectorAll('.action-btn')[0];
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy Text', 2000);
+      });
+    }
+
+    function printLetter() {
+  const content = document.getElementById('letterPage').innerText;
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Cover Letter</title>
+      <style>
+        body {
+          font-family: 'Times New Roman', Times, serif;
+          font-size: 13pt;
+          line-height: 1.9;
+          color: #000;
+          padding: 60px 80px;
+          white-space: pre-wrap;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+      </style>
+    </head>
+    <body>${content}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+  }, 500);
+}
+
+    function downloadTxt() {
+      const text = document.getElementById('letterPage').innerText;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cover_letter.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function handleRoleChange(select) {
+      const custom = document.getElementById('jobRoleCustom');
+      if (select.value === 'other') {
+        custom.style.display = 'block';
+        custom.required = true;
+      } else {
+        custom.style.display = 'none';
+        custom.required = false;
+      }
+    }
+
+    function handleCompanyChange(select) {
+      const custom = document.getElementById('companyCustom');
+      if (select.value === 'other') {
+        custom.style.display = 'block';
+        custom.required = true;
+      } else {
+        custom.style.display = 'none';
+        custom.required = false;
+      }
+    }
+
+    function handleSubmit(form) {
+      const roleSelect = document.getElementById('jobRoleSelect');
+      const roleCustom = document.getElementById('jobRoleCustom');
+      if (roleSelect.value === 'other' && roleCustom.value) {
+        roleSelect.value = roleCustom.value;
+      }
+
+      const companySelect = document.getElementById('companySelect');
+      const companyCustom = document.getElementById('companyCustom');
+      if (companySelect.value === 'other' && companyCustom.value) {
+        companySelect.value = companyCustom.value;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.querySelector('.btn-text').style.display = 'none';
+      btn.querySelector('.loading').style.display = 'inline';
+    }
+  </script>
+</body>
+</html>
