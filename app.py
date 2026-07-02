@@ -1,6 +1,7 @@
-from flask import Flask, request, render_template, session, make_response, redirect, url_for, jsonify
+from flask import Flask, request, render_template, session, make_response, redirect, url_for
 import os
 import io
+import json
 from werkzeug.utils import secure_filename
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -14,19 +15,15 @@ from utils.database import create_table, save_analysis, get_all_analyses, regist
 from utils.ai_feedback import get_resume_feedback, get_interview_questions, generate_cover_letter, generate_interview_question, evaluate_interview_answer, get_resume_breakdown
 
 app = Flask(__name__)
-
-# SECURITY FIX 1: secret key now comes from environment, with a random fallback
-# Add SECRET_KEY=<some-long-random-string> to your .env file (and to Render's
-# environment variables when you deploy). Never hardcode this in real code.
-app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+app.secret_key = os.environ.get("SECRET_KEY", "resumeanalyzer2024secret")
 
 UPLOAD_FOLDER = "uploads"
+TEMP_FOLDER = "temp_data"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(TEMP_FOLDER, exist_ok=True)
 
-# SECURITY FIX 4: restrict upload type and size at the server level (not just
-# the HTML accept=".pdf", which any user can bypass)
 ALLOWED_EXTENSIONS = {"pdf"}
-app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB limit
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -70,8 +67,8 @@ def login():
         password = request.form["password"]
         user = login_user(email, password)
         if user:
-            session['user_id'] = user['id']
-            session['user_name'] = user['name']
+            session['user_id'] = user[0]
+            session['user_name'] = user[1]
             return redirect(url_for('dashboard'))
         else:
             error = "Invalid email or password!"
@@ -120,15 +117,15 @@ def index():
         job_description = request.form.get("job_description", "")
 
         if not resume or resume.filename == "":
-            return render_template("index.html", user_name=session['user_name'],
-                                    error="Please choose a resume file.")
+            return render_template("index.html",
+                user_name=session['user_name'],
+                error="Please choose a resume file.")
 
-        # SECURITY FIX 4: reject anything that isn't a real .pdf
         if not allowed_file(resume.filename):
-            return render_template("index.html", user_name=session['user_name'],
-                                    error="Only PDF files are allowed.")
+            return render_template("index.html",
+                user_name=session['user_name'],
+                error="Only PDF files are allowed.")
 
-        # SECURITY FIX 3: sanitize filename before saving to disk
         filename = secure_filename(resume.filename)
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         resume.save(filepath)
@@ -177,38 +174,55 @@ def index():
             result['missing']
         )
 
-        # Store the result in the session and redirect (Post/Redirect/Get pattern).
-        # This avoids the browser's "resend form?" warning if the user refreshes
-        # the results page, since the actual page load is now a GET request.
+        # Store only small data in session cookie
         session['last_result'] = {
             "ats_score": ats_score,
-            "matched": result['matched'],
-            "missing": result['missing'],
-            "feedback": feedback,
-            "questions": questions,
+            "matched": list(result['matched']),
+            "missing": list(result['missing']),
             "breakdown": breakdown,
         }
 
+        # Store large text in temp file to avoid cookie size limit
+        user_temp = os.path.join(TEMP_FOLDER, f"user_{session['user_id']}.json")
+        with open(user_temp, "w") as f:
+            json.dump({
+                "feedback": feedback,
+                "questions": questions
+            }, f)
+
         return redirect(url_for('result'))
+
     notice = request.args.get('notice')
     banner_message = None
     if notice == 'upload_first':
         banner_message = "Please analyze a resume first before generating a cover letter."
-    return render_template("index.html", user_name=session['user_name'], banner_message=banner_message)
+    return render_template("index.html",
+        user_name=session['user_name'],
+        banner_message=banner_message)
 
 @app.route("/result")
 @login_required
 def result():
     data = session.get('last_result')
     if not data:
-        # Nobody has analyzed a resume yet this session — send them to upload one
         return redirect(url_for('index', notice='upload_first'))
+
+    # Load large data from temp file
+    feedback = "Could not load feedback."
+    questions = "Could not load questions."
+    user_temp = os.path.join(TEMP_FOLDER, f"user_{session['user_id']}.json")
+    if os.path.exists(user_temp):
+        with open(user_temp, "r") as f:
+            temp = json.load(f)
+            feedback = temp.get("feedback", feedback)
+            questions = temp.get("questions", questions)
+
     return render_template("result.html",
         ats_score=data["ats_score"],
         matched=data["matched"],
         missing=data["missing"],
-        feedback=data["feedback"],
-        questions=data["questions"],
+        feedback=feedback,
+        questions=questions,
         breakdown=data["breakdown"],
         user_name=session['user_name']
     )
@@ -217,7 +231,9 @@ def result():
 @login_required
 def history():
     analyses = get_all_analyses(session['user_id'])
-    return render_template("history.html", analyses=analyses, user_name=session['user_name'])
+    return render_template("history.html",
+        analyses=analyses,
+        user_name=session['user_name'])
 
 @app.route("/cover-letter", methods=["GET", "POST"])
 @login_required
@@ -226,7 +242,6 @@ def cover_letter():
     resume_text = session.get('resume_text', '')
     jd_text = session.get('job_description', '')
 
-    # Guardrail: don't let users generate a cover letter with no resume data
     if not resume_text:
         return redirect(url_for('index', notice='upload_first'))
 
@@ -244,8 +259,7 @@ def cover_letter():
         )
     return render_template("cover_letter.html",
         cover_letter=generated,
-        user_name=session['user_name']
-    )
+        user_name=session['user_name'])
 
 @app.route("/download-pdf", methods=["POST"])
 @login_required
@@ -280,7 +294,8 @@ def download_pdf():
 @app.route("/interview-prep")
 @login_required
 def interview_prep():
-    return render_template("interview_prep.html", user_name=session['user_name'])
+    return render_template("interview_prep.html",
+        user_name=session['user_name'])
 
 @app.route("/get-question", methods=["POST"])
 @login_required
@@ -309,7 +324,5 @@ def evaluate_answer():
     return {"feedback": feedback}
 
 if __name__ == "__main__":
-    # SECURITY FIX 2: debug mode now controlled by an environment variable,
-    # defaults to OFF. Set FLASK_DEBUG=True in your .env only for local dev.
     debug_mode = os.environ.get("FLASK_DEBUG", "False") == "True"
     app.run(debug=debug_mode)

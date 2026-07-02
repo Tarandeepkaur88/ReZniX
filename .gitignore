@@ -4,3 +4,4 @@ __pycache__/
 .env
 resume_analyzer.db
 uploads/
+temp_data/
