@@ -17,8 +17,8 @@ from utils.ai_feedback import get_resume_feedback, get_interview_questions, gene
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "resumeanalyzer2024secret")
 
-UPLOAD_FOLDER = "uploads"
-TEMP_FOLDER = "temp_data"
+UPLOAD_FOLDER = "/tmp/uploads"
+TEMP_FOLDER = "/tmp/temp_data"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
