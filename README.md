@@ -26,7 +26,7 @@ Reznix analyzes your resume against a job description, scores it for ATS (Applic
 ## Tech Stack
 
 - Backend: Python (Flask)
-- Database: SQLite
+- Database: PostgreSQL (Supabase)
 - Frontend: HTML, CSS, JavaScript (Jinja2 templates)
 - AI: LLM-powered feedback and content generation
 - PDF handling: pdfplumber (extraction), ReportLab (cover letter export)
